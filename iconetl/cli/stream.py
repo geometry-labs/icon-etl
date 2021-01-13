@@ -63,7 +63,8 @@ from iconetl.providers.auto import get_provider_from_uri
     "--output",
     type=str,
     help="Either Google PubSub topic path e.g. projects/your-project/topics/crypto_icon; "
-    "or Postgres connection url e.g. postgresql+pg8000://postgres:admin@127.0.0.1:5432/icon. "
+    "a Postgres connection url e.g. postgresql+pg8000://postgres:admin@127.0.0.1:5432/icon. "
+    "or a Kafka node url e.g. kafka.node.example[:1234]"
     "If not specified will print to console",
 )
 @click.option(
@@ -110,6 +111,46 @@ from iconetl.providers.auto import get_provider_from_uri
 )
 @click.option("--log-file", default=None, show_default=True, type=str, help="Log file")
 @click.option("--pid-file", default=None, show_default=True, type=str, help="pid file")
+@click.option(
+    "--kafka-blocks-topic",
+    default="blocks",
+    show_default=True,
+    type=str,
+    envvar="ICONETL_KAFKA_TOPIC_BLOCKS",
+    help="Name of Kafka topic for block data",
+)
+@click.option(
+    "--kafka-transactions-topic",
+    default="transactions",
+    show_default=True,
+    type=str,
+    envvar="ICONETL_KAFKA_TOPIC_TRANSACTIONS",
+    help="Name of Kafka topic for transaction data",
+)
+@click.option(
+    "--kafka-logs-topic",
+    default="logs",
+    show_default=True,
+    type=str,
+    envvar="ICONETL_KAFKA_TOPIC_LOGS",
+    help="Name of Kafka topic for log data",
+)
+@click.option(
+    "--kafka-compression-type",
+    default="gzip",
+    show_default=True,
+    type=str,
+    envvar="ICONETL_KAFKA_COMPRESSION_TYPE",
+    help="Type/level of compression for Kafka: either 'gzip', 'snappy', or None",
+)
+@click.option(
+    "--kafka-schema-registry-url",
+    default=None,
+    show_default=True,
+    type=str,
+    envvar="ICONETL_KAFKA_SCHEMA_REGISTRY_URL",
+    help="URL for Kafka schema registry. Must use 'http://'. If not specified, schema registry will not be used.",
+)
 def stream(
     last_synced_block_file,
     lag,
@@ -117,6 +158,11 @@ def stream(
     output,
     start_block,
     entity_types,
+    kafka_blocks_topic,
+    kafka_transactions_topic,
+    kafka_logs_topic,
+    kafka_compression_type,
+    kafka_schema_registry_url,
     period_seconds=10,
     batch_size=2,
     block_batch_size=10,
@@ -138,11 +184,21 @@ def stream(
     provider_uri = pick_random_provider_uri(provider_uri)
     logging.info("Using " + provider_uri)
 
+    kafka_settings = {
+        "topic_map": {
+            "block": kafka_blocks_topic,
+            "transaction": kafka_transactions_topic,
+            "log": kafka_logs_topic,
+        },
+        "compression_type": kafka_compression_type,
+        "schema_registry_url": kafka_schema_registry_url,
+    }
+
     streamer_adapter = IcxStreamerAdapter(
         batch_web3_provider=ThreadLocalProxy(
             lambda: get_provider_from_uri(provider_uri, batch=True)
         ),
-        item_exporter=create_item_exporter(output),
+        item_exporter=create_item_exporter(output, kafka_settings),
         batch_size=batch_size,
         max_workers=max_workers,
         entity_types=entity_types,
