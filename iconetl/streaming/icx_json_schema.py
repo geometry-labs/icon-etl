@@ -38,8 +38,8 @@ schemas = {
             "version": {"type": "string"},
             "transaction_count": {"type": "integer"},
             "peer_id": {"type": "string"},
-            "signature": {"type": "string"},
-            "next_leader": {"type": "string"},
+            "signature": {"type": ["string", "null"], "default": None},
+            "next_leader": {"type": ["string", "null"], "default": None},
             "item_id": {"type": "string"},
             "item_timestamp": {"type": "string"},
         },
@@ -48,7 +48,7 @@ schemas = {
         "type": "object",
         "properties": {
             "type": {"type": "string"},
-            "version": {"type": "string"},
+            "version": {"type": ["string", "null"], "default": None},
             "from_address": {"type": ["string", "null"], "default": None},
             "to_address": {"type": ["string", "null"], "default": None},
             "value": {"type": ["integer", "null"], "default": None},
@@ -64,7 +64,7 @@ schemas = {
             "fee": {"type": ["integer", "null"], "default": None},
             "signature": {"type": ["string", "null"], "default": None},
             "data_type": {"type": ["string", "null"], "default": None},
-            "data": {"type": ["object", "null"], "default": None},
+            "data": {"type": ["object", "string", "null"], "default": None},
             "receipt_cumulative_step_used": {
                 "type": ["integer", "null"],
                 "default": None,
