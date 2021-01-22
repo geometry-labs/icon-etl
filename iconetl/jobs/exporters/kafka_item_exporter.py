@@ -62,14 +62,17 @@ class KafkaItemExporter:
                     headers = []
 
                     if item["type"] == "block":
+                        key = bytes(str(item["number"]), "utf-8")
                         headers.append(("hash", bytes(item["hash"], "utf-8")))
 
                     elif item["type"] == "log":
+                        key = bytes(item["address"], "utf-8")
                         headers.append(
                             ("hash", bytes(item["transaction_hash"], "utf-8"))
                         )
 
                     else:
+                        key = bytes(item["to_address"], "utf-8")
                         headers.append(("hash", bytes(item["hash"], "utf-8")))
 
                         if item["to_address"]:
@@ -86,16 +89,18 @@ class KafkaItemExporter:
 
                     if self.serializers:
                         self.producer.produce(
-                            topic,
+                            topic=topic,
                             value=self.serializers[item_type](
                                 item, serialization_context
                             ),
+                            key=key,
                             headers=headers,
                         )
                     else:
                         self.producer.produce(
                             topic,
                             value=dumps(item),
+                            key=key,
                             headers=headers,
                         )
 

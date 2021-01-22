@@ -86,8 +86,16 @@ schemas = {
             "transaction_hash": {"type": "string"},
             "transaction_index": {"type": "integer"},
             "address": {"type": "string"},
-            "data": {"type": ["array", "null"], "default": None},
-            "indexed": {"type": ["array", "null"], "default": None},
+            "data": {
+                "type": ["array", "None"],
+                "items": {"type": "string"},
+                "default": None,
+            },
+            "indexed": {
+                "type": ["array", "null"],
+                "items": {"type": "string"},
+                "default": None,
+            },
             "block_number": {"type": "integer"},
             "block_timestamp": {"type": "integer"},
             "block_hash": {"type": "string"},
