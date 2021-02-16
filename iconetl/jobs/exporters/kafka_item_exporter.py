@@ -72,13 +72,14 @@ class KafkaItemExporter:
                         )
 
                     else:
-                        key = bytes(item["to_address"], "utf-8")
                         headers.append(("hash", bytes(item["hash"], "utf-8")))
 
                         if item["to_address"]:
                             headers.append(("to", bytes(item["to_address"], "utf-8")))
+                            key = bytes(item["to_address"], "utf-8")
                         else:
                             headers.append(("to", bytes("None", "utf-8")))
+                            key = bytes("None", "utf-8")
 
                         if item["from_address"]:
                             headers.append(
