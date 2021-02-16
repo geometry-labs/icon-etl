@@ -142,5 +142,5 @@ def register_schema(registry_client, topic_name, topic_type):
 
 def get_schema(topic_name, topic_type):
     schema = schemas[topic_type]
-    schema["title"] = "value_" + topic_name
+    schema["title"] = topic_name + "-value"
     return dumps(schema)
