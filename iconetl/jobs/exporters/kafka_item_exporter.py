@@ -105,6 +105,8 @@ class KafkaItemExporter:
                             headers=headers,
                         )
 
+                self.producer.flush()
+
     def convert_items(self, items):
         pass
 
