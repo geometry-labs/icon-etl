@@ -29,6 +29,8 @@ from blockchainetl_common.streaming.streaming_utils import (
     configure_signals,
 )
 from blockchainetl_common.thread_local_proxy import ThreadLocalProxy
+from iconsdk.icon_service import IconService
+from iconsdk.providers.http_provider import HTTPProvider
 
 from iconetl.enumeration.entity_type import EntityType
 from iconetl.providers.auto import get_provider_from_uri
@@ -69,6 +71,13 @@ from iconetl.providers.auto import get_provider_from_uri
 )
 @click.option(
     "-s", "--start-block", default=None, show_default=True, type=int, help="Start block"
+)
+@click.option(
+    "--start-at-head",
+    default=False,
+    show_default=True,
+    type=bool,
+    help="Start syncing at chain head",
 )
 @click.option(
     "-e",
@@ -157,6 +166,7 @@ def stream(
     provider_uri,
     output,
     start_block,
+    start_at_head,
     entity_types,
     kafka_blocks_topic,
     kafka_transactions_topic,
@@ -175,6 +185,7 @@ def stream(
     configure_signals()
     entity_types = parse_entity_types(entity_types)
     validate_entity_types(entity_types, output)
+    start_block = determine_start_block(start_block, start_at_head)
 
     from blockchainetl_common.streaming.streamer import Streamer
 
@@ -249,3 +260,20 @@ def validate_entity_types(entity_types, output):
 def pick_random_provider_uri(provider_uri):
     provider_uris = [uri.strip() for uri in provider_uri.split(",")]
     return random.choice(provider_uris)
+
+
+def determine_start_block(start_block, start_at_head, provider_uri):
+    if start_block and start_at_head:
+        raise ValueError(
+            "A start block value, {}, should not be specified if the --start-at-head option is enabled.".format(
+                start_block
+            )
+        )
+
+    if not start_at_head:
+        return start_block
+
+    if start_at_head:
+        svc = IconService(HTTPProvider(provider_uri))
+        head = svc.get_block("latest")["height"]
+        return head
