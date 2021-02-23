@@ -185,7 +185,7 @@ def stream(
     configure_signals()
     entity_types = parse_entity_types(entity_types)
     validate_entity_types(entity_types, output)
-    start_block = determine_start_block(start_block, start_at_head)
+    start_block = determine_start_block(start_block, start_at_head, provider_uri)
 
     from blockchainetl_common.streaming.streamer import Streamer
 
