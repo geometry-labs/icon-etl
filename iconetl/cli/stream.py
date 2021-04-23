@@ -162,7 +162,7 @@ from iconetl.providers.auto import get_provider_from_uri
 )
 @click.option(
     "--values-as-hex",
-    default=True,
+    default=False,
     show_default=True,
     type=bool,
     envvar="ICONETL_VALUES_AS_HEX",
