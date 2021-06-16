@@ -13,7 +13,7 @@ deployment:
 image:
   repository: geometrylabs/iconetl
   tag: latest
-  imagePullPolicy: IfNotExist
+  imagePullPolicy: IfNotPresent
 
 etl:
   mode: stream
