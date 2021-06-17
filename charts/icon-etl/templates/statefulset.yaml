@@ -15,6 +15,15 @@ spec:
       labels:
 {{ include "labels" . | indent 8 }}
     spec:
+      securityContext:
+        fsGroup: 1000
+      initContainers:
+        - name: init
+          image: busybox:1.33
+          command: ['sh', '-c', "echo 'Checking for existing file...' && [[ ! -f /data/last_synced_block.txt ]] && echo '1' > /data/last_synced_block.txt || echo 'File already exists...'"]
+          volumeMounts:
+          - name: data
+            mountPath: /data
       containers:
         - name: icon-etl
           image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
@@ -26,27 +35,29 @@ spec:
               memory: {{ .Values.deployment.resources.limits.memory | default "1024Mi" }}
               cpu: {{ .Values.deployment.resources.limits.cpu | default "750m" }}
           imagePullPolicy: {{ .Values.image.imagePullPolicy }}
-          command: ["iconetl"]
+          command: ["python"]
           args:
+            - iconetl
           {{- if eq .Values.etl.mode "stream" }}
             - stream
+            - --last-synced-block-file="/data/last_synced_block.txt"
             {{- if .Values.etl.lag }}
             - --lag={{ .Values.etl.lag }}
             {{- end }}
             {{- if .Values.etl.providerURI }}
-            - --provider-uri {{ .Values.etl.providerURI | quote }}
+            - --provider-uri={{ .Values.etl.providerURI | quote }}
             {{- end }}
             {{- if .Values.etl.output }}
-            - --output {{ .Values.etl.output | quote }}
+            - --output={{ .Values.etl.output | quote }}
             {{- end }}
             {{- if .Values.etl.startBlock }}
             - --start-block={{ .Values.etl.startBlock }}
             {{- end }}
             {{- if .Values.etl.startAtHead }}
-            - --start-at-head {{ .Values.etl.startAtHead | quote }}
+            - --start-at-head={{ .Values.etl.startAtHead }}
             {{- end }}
             {{- if .Values.etl.entityTypes }}
-            - --entity-types {{ .Values.etl.entityTypes | quote }}
+            - --entity-types={{ .Values.etl.entityTypes | quote }}
             {{- end }}
             {{- if .Values.etl.periodSeconds }}
             - --period-seconds={{ .Values.etl.periodSeconds}}
@@ -61,27 +72,27 @@ spec:
             - --max-workers={{ .Values.etl.maxWorkers }}
             {{- end }}
             {{- if .Values.etl.kafka.topics.blocks }}
-            - --kafka-blocks-topic {{ .Values.etl.kafka.topics.blocks | quote }}
+            - --kafka-blocks-topic={{ .Values.etl.kafka.topics.blocks | quote }}
             {{- end }}
             {{- if .Values.etl.kafka.topics.transactions }}
-            - --kafka-transactions-topic {{ .Values.etl.kafka.topics.transactions | quote }}
+            - --kafka-transactions-topic={{ .Values.etl.kafka.topics.transactions | quote }}
             {{- end }}
             {{- if .Values.etl.kafka.topics.logs }}
-            - --kafka-logs-topic {{ .Values.etl.kafka.topics.logs | quote }}
+            - --kafka-logs-topic={{ .Values.etl.kafka.topics.logs | quote }}
             {{- end }}
             {{- if .Values.etl.kafka.compressionType }}
-            - --kafka-compression-type {{ .Values.etl.kafka.compressionType | quote }}
+            - --kafka-compression-type={{ .Values.etl.kafka.compressionType | quote }}
             {{- end }}
             {{- if .Values.etl.kafka.schemaRegistryURL }}
-            - --kafka-schema-registry-url {{ .Values.etl.kafka.schemaRegistryURL | quote }}
+            - --kafka-schema-registry-url={{ .Values.etl.kafka.schemaRegistryURL | quote }}
             {{- end }}
             {{- if .Values.etl.kafka.valuesAsHex }}
-            - --values-as-hex {{ .Values.etl.kafka.valuesAsHex | quote }}
+            - --values-as-hex={{ .Values.etl.kafka.valuesAsHex }}
             {{- end }}
           {{- end }}
           volumeMounts:
             - name: data
-              mountPath: /icon-etl
+              mountPath: /data
   volumeClaimTemplates:
     - metadata:
         name: data
